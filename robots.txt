@@ -1,0 +1,3 @@
+User-agent: *
+Disallow:
+Sitemap: https://thesfb.github.io/sitemap.xml
