@@ -1,19 +1,21 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
   <channel>
-    <title></title>
+    <title>Home</title>
     <link>http://localhost:1313/</link>
-    <description>Recent content on </description>
+    <description>Recent content on Home</description>
     <generator>Hugo -- 0.152.2</generator>
     <language>en-us</language>
-    <lastBuildDate>Wed, 01 Jan 2025 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Wed, 31 Dec 2025 19:22:54 +0530</lastBuildDate>
     <atom:link href="http://localhost:1313/index.xml" rel="self" type="application/rss+xml" />
     <item>
-      <title>Hello World</title>
-      <link>http://localhost:1313/posts/hello-world/</link>
-      <pubDate>Wed, 01 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>http://localhost:1313/posts/hello-world/</guid>
-      <description>&lt;p&gt;This is my first Hugo post.&lt;/p&gt;</description>
+      <title>Zk Proofs</title>
+      <link>http://localhost:1313/posts/zk-proofs/</link>
+      <pubDate>Wed, 31 Dec 2025 19:22:54 +0530</pubDate>
+      <guid>http://localhost:1313/posts/zk-proofs/</guid>
+      <description>&lt;h1 id=&#34;zero-knowledge-proofs-how-i-think-about-them-as-an-engineer&#34;&gt;&lt;strong&gt;Zero-Knowledge Proofs: How I Think About Them as an Engineer&lt;/strong&gt;&lt;/h1&gt;
+&lt;p&gt;When I look at most verification systems, I see the same pattern repeated everywhere: verification is implemented by disclosure. Secrets are transmitted, identifiers are stored, and trust is externalized to databases and operators. From an engineering perspective, this is a fragile design choice.&lt;/p&gt;
+&lt;p&gt;Zero-knowledge proofs give me a different primitive: &lt;strong&gt;verification without disclosure&lt;/strong&gt;. Not as a policy decision, but as a cryptographic guarantee.&lt;/p&gt;</description>
     </item>
     <item>
       <title>About</title>

@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en" dir="auto" data-theme="dark">
+
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="noindex, nofollow">
+<title>Zero-Knowledge Proofs: How I Think About Them | Home</title>
+<meta name="keywords" content="">
+<meta name="description" content="When I look at most verification systems, I see the same pattern repeated everywhere: verification is implemented by disclosure. Secrets are transmitted, identifiers are stored, and trust is externalized to databases and operators. From an engineering perspective, this is a fragile design choice.
+Zero-knowledge proofs give me a different primitive: verification without disclosure. Not as a policy decision, but as a cryptographic guarantee. While this particular blog is meant to be an introduction to ZKPS, I&rsquo;ll post followups where I will go in deatil into implementation, the tech behind it and real world use-cases.">
+<meta name="author" content="">
+<link rel="canonical" href="http://localhost:1313/posts/zk-proofs/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.343cc480b9ffc8f04ccbe5e968ad674880cab773ec19905e93033065c1e7a804.css" integrity="sha256-NDzEgLn/yPBMy&#43;XpaK1nSIDKt3PsGZBekwMwZcHnqAQ=" rel="preload stylesheet" as="style">
+<link rel="icon" href="http://localhost:1313/favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313/favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313/favicon-32x32.png">
+<link rel="apple-touch-icon" href="http://localhost:1313/apple-touch-icon.png">
+<link rel="mask-icon" href="http://localhost:1313/safari-pinned-tab.svg">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" hreflang="en" href="http://localhost:1313/posts/zk-proofs/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+</noscript>
+<script>
+    if (localStorage.getItem("pref-theme") === "light") {
+        document.querySelector("html").dataset.theme = 'light';
+    }
+
+</script>
+</head>
+<body id="top">
+    <header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="http://localhost:1313/" accesskey="h" title="Home (Alt + H)">Home</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="http://localhost:1313/posts/" title="Posts">
+                    <span>Posts</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/about/" title="Resume">
+                    <span>Resume</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    
+    <h1 class="post-title entry-hint-parent">
+      Zero-Knowledge Proofs: How I Think About Them
+    </h1>
+    <div class="post-meta"><span title='2025-12-31 19:22:54 +0530 IST'>December 31, 2025</span>&nbsp;·&nbsp;<span>4 min</span>
+
+</div>
+  </header> 
+  <div class="post-content"><p>When I look at most verification systems, I see the same pattern repeated everywhere: verification is implemented by disclosure. Secrets are transmitted, identifiers are stored, and trust is externalized to databases and operators. From an engineering perspective, this is a fragile design choice.</p>
+<p>Zero-knowledge proofs give me a different primitive: <strong>verification without disclosure</strong>. Not as a policy decision, but as a cryptographic guarantee. While this particular blog is meant to be an introduction to ZKPS, I&rsquo;ll post followups where I will go in deatil into implementation, the tech behind it and real world use-cases.</p>
+<p>This post is how I think about zero-knowledge proofs when designing or evaluating systems&mdash;not as a concept, but as an engineering tool.</p>
+<h2 id="part-1-the-engineering-problem-zk-solves"><strong>Part 1: The Engineering Problem ZK Solves</strong><a hidden class="anchor" aria-hidden="true" href="#part-1-the-engineering-problem-zk-solves">#</a></h2>
+<p>Most systems need to answer binary questions:</p>
+<ul>
+<li>
+<p>Is this user authorized?</p>
+</li>
+<li>
+<p>Does this transaction follow the rules?</p>
+</li>
+<li>
+<p>Does this input satisfy a constraint?</p>
+</li>
+</ul>
+<p>Traditionally, we answer these questions by moving data to the verifier.</p>
+<p>That creates several problems:</p>
+<ul>
+<li>
+<p>Secrets exist outside their original trust boundary</p>
+</li>
+<li>
+<p>Databases become long-lived attack surfaces</p>
+</li>
+<li>
+<p>Breaches scale catastrophically</p>
+</li>
+<li>
+<p>Verification logic is coupled to data retention</p>
+</li>
+</ul>
+<p>From an engineering standpoint, this is unnecessary coupling.</p>
+<p>Zero-knowledge proofs let me decouple <strong>verification</strong> from <strong>data possession</strong>. The verifier checks correctness of a statement. It never receives the underlying witness.</p>
+<h3 id="traditional-vs-zk-based-verification"><strong>Traditional vs ZK-Based Verification</strong><a hidden class="anchor" aria-hidden="true" href="#traditional-vs-zk-based-verification">#</a></h3>
+<table>
+  <thead>
+      <tr>
+          <th><strong>Aspect</strong></th>
+          <th><strong>Traditional Systems</strong></th>
+          <th><strong>ZK-Based Systems</strong></th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>Verification method</td>
+          <td>Data disclosure</td>
+          <td>Proof verification</td>
+      </tr>
+      <tr>
+          <td>Secret handling</td>
+          <td>Stored or transmitted</td>
+          <td>Never leaves prover</td>
+      </tr>
+      <tr>
+          <td>Breach impact</td>
+          <td>High</td>
+          <td>Limited</td>
+      </tr>
+      <tr>
+          <td>Trust assumptions</td>
+          <td>Operators + storage</td>
+          <td>Cryptography only</td>
+      </tr>
+  </tbody>
+</table>
+<p>What I gain is a strictly smaller trust surface.</p>
+<h2 id="part-2-formal-model-what-i-actually-rely-on"><strong>Part 2: Formal Model (What I Actually Rely On)</strong><a hidden class="anchor" aria-hidden="true" href="#part-2-formal-model-what-i-actually-rely-on">#</a></h2>
+<p>I model a zero-knowledge proof as a protocol between:</p>
+<ul>
+<li>
+<p><strong>Prover (P)</strong>: holds a witness <em>w</em></p>
+</li>
+<li>
+<p><strong>Verifier (V)</strong>: checks a statement <em>S</em></p>
+</li>
+</ul>
+<p>The prover wants to convince the verifier that:</p>
+<blockquote>
+<p>∃ w such that C(w) = true</p>
+</blockquote>
+<p>Where <em>C</em> is a constraint system.</p>
+<p>For this to work, the protocol must satisfy:</p>
+<table>
+  <thead>
+      <tr>
+          <th><strong>Property</strong></th>
+          <th><strong>Engineering Interpretation</strong></th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>Completeness</td>
+          <td>Valid executions always pass</td>
+      </tr>
+      <tr>
+          <td>Soundness</td>
+          <td>Invalid executions almost never pass</td>
+      </tr>
+      <tr>
+          <td>Zero-knowledge</td>
+          <td>Verifier cannot extract <em>w</em></td>
+      </tr>
+  </tbody>
+</table>
+<p>The zero-knowledge property is formalized via <strong>simulation</strong>. If a simulator can generate an indistinguishable proof transcript without access to <em>w</em>, then no information about <em>w</em> is leaked.</p>
+<p>This is the core guarantee I rely on. Everything else is an optimization.</p>
+<h2 id="computation-not-statements"><strong>Computation, Not Statements</strong><a hidden class="anchor" aria-hidden="true" href="#computation-not-statements">#</a></h2>
+<p>Modern ZK systems prove statements about <strong>computation</strong>, not just facts.</p>
+<p>As an engineer, I think in terms of pipelines:</p>
+<ol>
+<li>
+<p>Write a program / computation</p>
+</li>
+<li>
+<p>Compile it into a constraint system</p>
+</li>
+<li>
+<p>Treat private inputs as the witness</p>
+</li>
+<li>
+<p>Generate a proof of constraint satisfaction</p>
+</li>
+<li>
+<p>Verify the proof with minimal overhead</p>
+</li>
+</ol>
+<p>Most systems today use variants of <strong>arithmetic circuits</strong> or <strong>R1CS (Rank-1 Constraint Systems)</strong> to represent computation.</p>
+<h3 id="what-the-verifier-checks"><strong>What the Verifier Checks</strong><a hidden class="anchor" aria-hidden="true" href="#what-the-verifier-checks">#</a></h3>
+<ul>
+<li>
+<p>Constraint satisfaction</p>
+</li>
+<li>
+<p>Proof validity</p>
+</li>
+<li>
+<p>Nothing about inputs or intermediate values</p>
+</li>
+</ul>
+<p>The verifier does <em>not</em> re-run the computation.</p>
+<h2 id="proof-systems-i-care-about"><strong>Proof Systems I Care About</strong><a hidden class="anchor" aria-hidden="true" href="#proof-systems-i-care-about">#</a></h2>
+<table>
+  <thead>
+      <tr>
+          <th><strong>System</strong></th>
+          <th><strong>Why I&rsquo;d Choose It</strong></th>
+          <th><strong>Cost</strong></th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>zk-SNARKs</td>
+          <td>Very small proofs, fast verification</td>
+          <td>Trusted setup</td>
+      </tr>
+      <tr>
+          <td>zk-STARKs</td>
+          <td>Transparent, no trusted setup</td>
+          <td>Larger proofs, more bandwidth</td>
+      </tr>
+      <tr>
+          <td>Bulletproofs</td>
+          <td>No setup, simpler assumptions</td>
+          <td>Slower verification</td>
+      </tr>
+  </tbody>
+</table>
+<p>Trade-offs are explicit. Zero-knowledge does not remove cost&mdash;it reallocates it.</p>
+<h2 id="properties-that-matter-in-real-systems"><strong>Properties That Matter in Real Systems</strong><a hidden class="anchor" aria-hidden="true" href="#properties-that-matter-in-real-systems">#</a></h2>
+<p>These are the properties I evaluate before adopting ZK in a system:</p>
+<ul>
+<li>
+<p><strong>Non-interactivity</strong></p>
+<blockquote>
+<p>Proofs must be verifiable without interaction.</p>
+</blockquote>
+</li>
+<li>
+<p><strong>Succinct verification</strong></p>
+<blockquote>
+<p>Verification must be cheaper than recomputation.</p>
+</blockquote>
+</li>
+<li>
+<p><strong>Composable security</strong></p>
+<blockquote>
+<p>Proofs must compose safely with other protocols.</p>
+</blockquote>
+</li>
+<li>
+<p><strong>Failure containment</strong></p>
+<blockquote>
+<p>Proof generation failure should not leak secrets.</p>
+</blockquote>
+</li>
+</ul>
+<p>If any of these fail, ZK becomes academic instead of practical.</p>
+<h2 id="where-zk-fits-well-and-where-it-doesn"><strong>Where ZK Fits Well (and Where It Doesn&rsquo;t)</strong><a hidden class="anchor" aria-hidden="true" href="#where-zk-fits-well-and-where-it-doesn">#</a></h2>
+<h3 id="good-fits"><strong>Good Fits</strong><a hidden class="anchor" aria-hidden="true" href="#good-fits">#</a></h3>
+<ul>
+<li>
+<p>Blockchain validation (L2 rollups, private transactions)</p>
+</li>
+<li>
+<p>Authentication without password transmission</p>
+</li>
+<li>
+<p>Verifiable computation on untrusted infrastructure</p>
+</li>
+<li>
+<p>Selective disclosure credentials</p>
+</li>
+</ul>
+<h3 id="poor-fits"><strong>Poor Fits</strong><a hidden class="anchor" aria-hidden="true" href="#poor-fits">#</a></h3>
+<ul>
+<li>
+<p>Low-latency systems with tight compute budgets</p>
+</li>
+<li>
+<p>Systems where data disclosure is already acceptable</p>
+</li>
+<li>
+<p>Teams without cryptographic review capacity</p>
+</li>
+</ul>
+<p>ZK systems are powerful, but unforgiving. Incorrect circuit design is a correctness bug, not a performance issue.</p>
+<h2 id="the-cost-i-accept-as-an-engineer"><strong>The Cost I Accept as an Engineer</strong><a hidden class="anchor" aria-hidden="true" href="#the-cost-i-accept-as-an-engineer">#</a></h2>
+<table>
+  <thead>
+      <tr>
+          <th><strong>Cost</strong></th>
+          <th><strong>Why I Accept It</strong></th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>Expensive proving</td>
+          <td>Reduces trust assumptions</td>
+      </tr>
+      <tr>
+          <td>Complex tooling</td>
+          <td>Eliminates data retention risk</td>
+      </tr>
+      <tr>
+          <td>Hard debugging</td>
+          <td>Prevents catastrophic leaks</td>
+      </tr>
+  </tbody>
+</table>
+<p>What I&rsquo;m trading is <strong>developer convenience</strong> for <strong>system robustness</strong>.</p>
+<h2 id="why-i-think-zk-is-an-engineering-primitive-not-a-feature"><strong>Why I Think ZK Is an Engineering Primitive, Not a Feature</strong><a hidden class="anchor" aria-hidden="true" href="#why-i-think-zk-is-an-engineering-primitive-not-a-feature">#</a></h2>
+<p>Most security failures I&rsquo;ve dealt with trace back to excess data existing somewhere it shouldn&rsquo;t. Zero-knowledge proofs attack that problem directly by making certain classes of data <em>unnecessary</em>.</p>
+<p>They don&rsquo;t rely on:</p>
+<ul>
+<li>
+<p>Honest operators</p>
+</li>
+<li>
+<p>Secure databases</p>
+</li>
+<li>
+<p>Correct policy enforcement</p>
+</li>
+</ul>
+<p>They rely on math and constraints.</p>
+<p>From an engineering perspective, that&rsquo;s a win. I&rsquo;d rather reason about constraint satisfaction than trust that no one will misuse stored secrets.</p>
+<p>I don&rsquo;t use zero-knowledge proofs everywhere. But when verification and privacy collide, they&rsquo;re the cleanest abstraction I know.</p>
+<p>If a system doesn&rsquo;t need to know something, I don&rsquo;t think it should be able to learn it.</p>
+<p>That&rsquo;s the engineering argument for zero-knowledge.</p>
+
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+    </ul>
+
+  </footer>
+</article>
+    </main>
+    
+<footer class="footer">
+        <span>&copy; 2025 <a href="http://localhost:1313/">Home</a></span> · 
+
+    <span>
+        Powered by
+        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
+        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu');
+    if (menu) {
+        
+        const scrollPosition = localStorage.getItem("menu-scroll-position");
+        if (scrollPosition) {
+            menu.scrollLeft = parseInt(scrollPosition, 10);
+        }
+        
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+            mybutton.style.visibility = "visible";
+            mybutton.style.opacity = "1";
+        } else {
+            mybutton.style.visibility = "hidden";
+            mybutton.style.opacity = "0";
+        }
+    };
+
+</script>
+<script>
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        const html = document.querySelector("html");
+        if (html.dataset.theme === "dark") {
+            html.dataset.theme = 'light';
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            html.dataset.theme = 'dark';
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    })
+
+</script>
+<script>
+    document.querySelectorAll('pre > code').forEach((codeblock) => {
+        const container = codeblock.parentNode.parentNode;
+
+        const copybutton = document.createElement('button');
+        copybutton.classList.add('copy-code');
+        copybutton.innerHTML = 'copy';
+
+        function copyingDone() {
+            copybutton.innerHTML = 'copied!';
+            setTimeout(() => {
+                copybutton.innerHTML = 'copy';
+            }, 2000);
+        }
+
+        copybutton.addEventListener('click', (cb) => {
+            if ('clipboard' in navigator) {
+                navigator.clipboard.writeText(codeblock.textContent);
+                copyingDone();
+                return;
+            }
+
+            const range = document.createRange();
+            range.selectNodeContents(codeblock);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            try {
+                document.execCommand('copy');
+                copyingDone();
+            } catch (e) { };
+            selection.removeRange(range);
+        });
+
+        if (container.classList.contains("highlight")) {
+            container.appendChild(copybutton);
+        } else if (container.parentNode.firstChild == container) {
+            
+        } else if (codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName == "TABLE") {
+            
+            codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(copybutton);
+        } else {
+            
+            codeblock.parentNode.appendChild(copybutton);
+        }
+    });
+</script>
+</body>
+
+</html>

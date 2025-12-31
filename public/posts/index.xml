@@ -1,19 +1,20 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
   <channel>
-    <title>Posts on </title>
+    <title>Posts on Home</title>
     <link>http://localhost:1313/posts/</link>
-    <description>Recent content in Posts on </description>
+    <description>Recent content in Posts on Home</description>
     <generator>Hugo -- 0.152.2</generator>
     <language>en-us</language>
-    <lastBuildDate>Wed, 01 Jan 2025 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Wed, 31 Dec 2025 19:22:54 +0530</lastBuildDate>
     <atom:link href="http://localhost:1313/posts/index.xml" rel="self" type="application/rss+xml" />
     <item>
-      <title>Hello World</title>
-      <link>http://localhost:1313/posts/hello-world/</link>
-      <pubDate>Wed, 01 Jan 2025 00:00:00 +0000</pubDate>
-      <guid>http://localhost:1313/posts/hello-world/</guid>
-      <description>&lt;p&gt;This is my first Hugo post.&lt;/p&gt;</description>
+      <title>Zero-Knowledge Proofs: How I Think About Them</title>
+      <link>http://localhost:1313/posts/zk-proofs/</link>
+      <pubDate>Wed, 31 Dec 2025 19:22:54 +0530</pubDate>
+      <guid>http://localhost:1313/posts/zk-proofs/</guid>
+      <description>&lt;p&gt;When I look at most verification systems, I see the same pattern repeated everywhere: verification is implemented by disclosure. Secrets are transmitted, identifiers are stored, and trust is externalized to databases and operators. From an engineering perspective, this is a fragile design choice.&lt;/p&gt;
+&lt;p&gt;Zero-knowledge proofs give me a different primitive: &lt;strong&gt;verification without disclosure&lt;/strong&gt;. Not as a policy decision, but as a cryptographic guarantee. While this particular blog is meant to be an introduction to ZKPS, I&amp;rsquo;ll post followups where I will go in deatil into implementation, the tech behind it and real world use-cases.&lt;/p&gt;</description>
     </item>
   </channel>
 </rss>
