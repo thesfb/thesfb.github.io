@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
   <channel>
-    <title>Another Day</title>
+    <title></title>
     <link>http://localhost:1313/</link>
-    <description>Recent content on Another Day</description>
+    <description>Recent content on </description>
     <generator>Hugo -- 0.152.2</generator>
     <language>en-us</language>
     <lastBuildDate>Wed, 01 Jan 2025 00:00:00 +0000</lastBuildDate>
@@ -14,6 +14,15 @@
       <pubDate>Wed, 01 Jan 2025 00:00:00 +0000</pubDate>
       <guid>http://localhost:1313/posts/hello-world/</guid>
       <description>&lt;p&gt;This is my first Hugo post.&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>About</title>
+      <link>http://localhost:1313/about/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1313/about/</guid>
+      <description>&lt;p&gt;I’m &lt;strong&gt;Sudhanshu Bhardwaj&lt;/strong&gt;, a Computer Science and Systems Engineering undergraduate with a strong focus on &lt;strong&gt;backend systems, security, and applied cryptography&lt;/strong&gt;.&lt;/p&gt;
+&lt;p&gt;My work sits at the intersection of &lt;strong&gt;systems engineering, cybersecurity, and infrastructure-level problem solving&lt;/strong&gt;. I’m interested in how real systems fail, how they’re exploited, and how to design them to fail less often.&lt;/p&gt;
+&lt;p&gt;I’ve led and built security-focused initiatives at the student and project level — from organizing large-scale Capture The Flag (CTF) competitions to developing tools for vulnerability analysis, identity misuse detection, and legacy system auditing.&lt;/p&gt;</description>
     </item>
   </channel>
 </rss>

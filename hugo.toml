@@ -1,7 +1,7 @@
 # hugo.toml
 baseURL = "https://thesfb.github.io/"
 languageCode = "en-us"
-title = "Another Day"
+title = ""
 theme = "PaperMod"
 
 
@@ -15,6 +15,10 @@ enableRobotsTXT = true
   ShowReadingTime = true
   ShowCodeCopyButtons = true
   ShowPostNavLinks = true
+  ShowRecentPosts = true
+  mainSections = ["posts"]
+
+  
 
 [[menu.main]]
   name = "Posts"
@@ -22,6 +26,25 @@ enableRobotsTXT = true
   weight = 1
 
 [[menu.main]]
-  name = "About"
+  name = "Resume"
   url = "/about/"
   weight = 2
+
+[params.profileMode]
+  enabled = true
+  title = "Report By Sudhanshu"
+  subtitle = "Rust - Web3 - Zero Knowledge - Projects"
+  imageUrl = ""
+  imageTitle = ""
+  imageWidth = 120
+  imageHeight = 120
+
+  [[params.profileMode.buttons]]
+    name = "Posts"
+    url = "/posts/"
+
+  [[params.profileMode.buttons]]
+    name = "Resume"
+    url = "/about/"
+    
+  
