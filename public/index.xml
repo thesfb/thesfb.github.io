@@ -9,13 +9,12 @@
     <lastBuildDate>Wed, 31 Dec 2025 19:22:54 +0530</lastBuildDate>
     <atom:link href="http://localhost:1313/index.xml" rel="self" type="application/rss+xml" />
     <item>
-      <title>Zk Proofs</title>
+      <title>Zero-Knowledge Proofs: How I Think About Them</title>
       <link>http://localhost:1313/posts/zk-proofs/</link>
       <pubDate>Wed, 31 Dec 2025 19:22:54 +0530</pubDate>
       <guid>http://localhost:1313/posts/zk-proofs/</guid>
-      <description>&lt;h1 id=&#34;zero-knowledge-proofs-how-i-think-about-them-as-an-engineer&#34;&gt;&lt;strong&gt;Zero-Knowledge Proofs: How I Think About Them as an Engineer&lt;/strong&gt;&lt;/h1&gt;
-&lt;p&gt;When I look at most verification systems, I see the same pattern repeated everywhere: verification is implemented by disclosure. Secrets are transmitted, identifiers are stored, and trust is externalized to databases and operators. From an engineering perspective, this is a fragile design choice.&lt;/p&gt;
-&lt;p&gt;Zero-knowledge proofs give me a different primitive: &lt;strong&gt;verification without disclosure&lt;/strong&gt;. Not as a policy decision, but as a cryptographic guarantee.&lt;/p&gt;</description>
+      <description>&lt;p&gt;When I look at most verification systems, I see the same pattern repeated everywhere: verification is implemented by disclosure. Secrets are transmitted, identifiers are stored, and trust is externalized to databases and operators. From an engineering perspective, this is a fragile design choice.&lt;/p&gt;
+&lt;p&gt;Zero-knowledge proofs give me a different primitive: &lt;strong&gt;verification without disclosure&lt;/strong&gt;. Not as a policy decision, but as a cryptographic guarantee. While this particular blog is meant to be an introduction to ZKPS, I&amp;rsquo;ll post followups where I will go in deatil into implementation, the tech behind it and real world use-cases.&lt;/p&gt;</description>
     </item>
     <item>
       <title>About</title>

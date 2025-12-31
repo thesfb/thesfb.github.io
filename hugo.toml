@@ -18,6 +18,12 @@ enableRobotsTXT = true
   ShowRecentPosts = true
   mainSections = ["posts"]
 
+  socialIcons = [
+    { name = "github", url = "https://github.com/thesfb" },
+    { name = "linkedin", url = "https://linkedin.com/in/sudhanshu-bhardwaj" },
+    { name = "x", url = "https://x.com/1337_sb" }
+  ]
+
   
 
 [[menu.main]]
