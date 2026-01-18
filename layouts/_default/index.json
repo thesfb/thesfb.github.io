@@ -1,0 +1,18 @@
+{
+  "version": "https://jsonfeed.org/version/1",
+  "title": "{{ .Site.Title }}",
+  "home_page_url": "{{ .Site.BaseURL }}",
+  "items": [
+    {{ range $index, $page := where .Site.RegularPages "Type" "posts" }}
+    {{ if $index }},{{ end }}
+    {
+      "title": {{ .Title | jsonify }},
+      "url": {{ .Permalink | jsonify }},
+      "date_published": {{ .Date.Format "2006-01-02T15:04:05Z07:00" | jsonify }},
+      "summary": {{ .Summary | jsonify }},
+      "content_text": {{ .Plain | jsonify }},
+      "tags": {{ .Params.tags | jsonify }}
+    }
+    {{ end }}
+  ]
+}
