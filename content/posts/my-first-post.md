@@ -1,16 +1,339 @@
 ---
-title: "My First Post"
-date: 2025-01-18
+title: "Building My First ZK Circuit: A Journey Through Privacy-Preserving Authentication"
+date: 2026-01-18
+description: "A developer's honest take on implementing zero-knowledge proofs for authentication systems - the good, the confusing, and the surprisingly elegant solutions I stumbled upon."
+tags: ["zero-knowledge", "cryptography", "privacy", "authentication", "security", "zk-snarks", "web3"]
+categories: ["Security", "Cryptography"]
 draft: false
-tags: ["security", "web3"]
-description: "A deep dive into reentrancy vulnerabilities in smart contracts and how to prevent them using checks-effects-interactions pattern."
 ---
 
-This is my first blog post. Testing syntax highlighting:
-```rust
-fn main() {
-    println!("Hello, Web3 Security!");
+So I finally bit the bullet and dove into zero-knowledge proofs. Not because of the hype, not because everyone's talking about ZK-rollups, but because I had a real problem: how do you prove you're over 21 without showing your actual birthdate to every random website that asks?
+
+Turns out, this rabbit hole goes *deep*. Here's what I learned building my first ZK circuit for privacy-preserving authentication, and why I think every security engineer should at least understand the primitives—even if you're skeptical of the Web3 circus around it.
+
+## The Problem That Got Me Started
+
+Traditional authentication is basically a trust fall. You hand over your credentials, your personal data, sometimes your entire identity document, and hope the other party doesn't misuse it. We've built entire industries around "trusted third parties" because, well, what else were we supposed to do?
+
+But here's the thing: mathematically, we *can* do better. Zero-knowledge proofs let you prove statements without revealing the underlying data. The classic example is proving you know a password without sending the password. But it goes way beyond that.
+
+I wanted to build something practical: an age verification system where users could prove they're over a certain age without revealing their actual birthdate. No government IDs uploaded to random servers, no dates of birth in databases waiting to be breached.
+
+## The "Aha" Moment (And Initial Confusion)
+
+The conceptual breakthrough with ZK proofs is this: you can create a mathematical proof that you executed a computation correctly and got a specific result, without revealing the inputs to that computation.
+
+In pseudocode, imagine this:
+
+```
+function verify_age(birthdate, current_date, min_age):
+    age = current_date - birthdate
+    return age >= min_age
+```
+
+Traditional approach: send `birthdate` to the server, server runs this function, returns true/false. Server now knows your exact birthdate forever.
+
+ZK approach: you run this computation locally, generate a cryptographic proof that you executed it correctly and got `true`, send only the proof. Server verifies the proof without ever seeing your birthdate.
+
+Sounds like magic, right? That's because it kind of is, and the first time I tried to implement this, I got lost in a maze of "circuits," "constraints," and "witness generation."
+
+## Picking Your ZK Framework (The Framework Wars)
+
+The ZK ecosystem is fragmented as hell. You've got:
+
+- **SNARKs** (Succinct Non-Interactive Arguments of Knowledge) - small proofs, fast verification, but often need a "trusted setup"
+- **STARKs** (Scalable Transparent Arguments of Knowledge) - no trusted setup, but larger proof sizes
+- **Bulletproofs** - no trusted setup, range proofs, but slower verification
+
+I went with SNARKs using Circom because the tooling is mature and there's actually documentation that doesn't assume you have a PhD in elliptic curve cryptography.
+
+## Writing My First Circuit
+
+Circuits in ZK systems are weird. You're not writing normal code—you're defining mathematical constraints. Think of it like writing SQL queries instead of procedural code. You're declaring relationships, not executing steps.
+
+Here's a simplified version of my age verification circuit in Circom-style pseudocode:
+
+```circom
+template AgeVerification() {
+    // Private inputs (witness) - user keeps these secret
+    signal private input birthYear;
+    signal private input birthMonth;
+    signal private input birthDay;
+    
+    // Public inputs - everyone can see these
+    signal input currentYear;
+    signal input currentMonth;
+    signal input currentDay;
+    signal input minimumAge;
+    
+    // Output - the claim we're proving
+    signal output isOldEnough;
+    
+    // Constraint: calculate age in years (simplified)
+    signal age;
+    age <-- currentYear - birthYear;
+    
+    // Additional constraints for month/day checking
+    signal monthCheck;
+    monthCheck <-- (currentMonth > birthMonth) ? 0 : 
+                   (currentMonth < birthMonth) ? -1 : 0;
+    
+    signal dayCheck;
+    dayCheck <-- (currentDay >= birthDay) ? 0 : -1;
+    
+    // Adjust age based on whether birthday has occurred this year
+    signal adjustedAge;
+    adjustedAge <-- age + monthCheck + dayCheck;
+    
+    // Final constraint: is age sufficient?
+    signal diff;
+    diff <-- adjustedAge - minimumAge;
+    
+    // Constrain output to be boolean
+    isOldEnough <-- diff >= 0 ? 1 : 0;
+    isOldEnough * (isOldEnough - 1) === 0;
+    
+    // Range checks to prevent cheating
+    component birthYearRange = RangeCheck(1900, 2024);
+    birthYearRange.in <== birthYear;
 }
 ```
 
-More content here...
+The `<--` operator is assignment, while `<==` is constraint assignment. This distinction broke my brain initially. You're not just computing values; you're proving relationships between values.
+
+## The Gotchas Nobody Tells You About
+
+### 1. **Arithmetic Circuits Operate in Finite Fields**
+
+This one bit me hard. You're not working with regular integers—you're working in modular arithmetic over a prime field. This means:
+
+```
+// This seems fine, right?
+signal x;
+x <-- -5;  // NOPE. This is actually a huge positive number mod p
+```
+
+Negative numbers don't exist in the way you expect. You have to be *really* careful with comparisons and range checks.
+
+### 2. **You Can't Have If-Statements (Not Really)**
+
+Traditional conditional logic doesn't work in circuits. Everything must be a constraint. So instead of:
+
+```javascript
+if (age >= 21) {
+    return true;
+} else {
+    return false;
+}
+```
+
+You write:
+
+```circom
+// Convert boolean to signal using constraints
+isValid <-- (age >= 21) ? 1 : 0;
+isValid * (1 - isValid) === 0;  // Ensures isValid is 0 or 1
+```
+
+It's declarative, not imperative. This mental shift took me a solid week.
+
+### 3. **Trusted Setup Ceremonies Are Weird**
+
+For many SNARK systems, you need a "trusted setup"—a ceremony where multiple parties contribute randomness to generate proving and verification keys. If even ONE party in the ceremony is honest and destroys their secret randomness, the system is secure.
+
+But if *everyone* in the ceremony colludes (or if you run it yourself for testing), they could theoretically forge proofs. This is the "toxic waste" problem.
+
+For production systems, you either:
+- Use transparent systems (STARKs, Bulletproofs) that don't need trusted setup
+- Use a well-run multi-party computation ceremony (like Zcash's Powers of Tau)
+- Use updatable/universal setups (like PLONK)
+
+For my toy project, I just ran my own ceremony because I was the only user. In production? I'd be way more paranoid.
+
+## The Authentication Flow
+
+Here's how it actually works in practice:
+
+```python
+# Client side
+def generate_age_proof(user_birthdate, min_age):
+    # Prepare witness (private inputs)
+    witness = {
+        'birthYear': user_birthdate.year,
+        'birthMonth': user_birthdate.month,
+        'birthDay': user_birthdate.day
+    }
+    
+    # Prepare public inputs
+    public_inputs = {
+        'currentYear': datetime.now().year,
+        'currentMonth': datetime.now().month,
+        'currentDay': datetime.now().day,
+        'minimumAge': min_age
+    }
+    
+    # Generate proof (this is computationally expensive)
+    proof = zk_prover.prove(circuit, witness, public_inputs)
+    
+    return {
+        'proof': proof,
+        'publicInputs': public_inputs
+    }
+
+# Server side
+def verify_age_proof(proof_data):
+    # Extract proof and public inputs
+    proof = proof_data['proof']
+    public_inputs = proof_data['publicInputs']
+    
+    # Verify the proof (this is fast!)
+    is_valid = zk_verifier.verify(
+        verification_key,
+        proof,
+        public_inputs
+    )
+    
+    if is_valid:
+        # User proved they meet age requirement
+        # We never saw their actual birthdate
+        return True
+    return False
+```
+
+The beautiful part: verification is *fast* (milliseconds) even though proof generation might take seconds. This asymmetry is what makes ZK proofs useful at scale.
+
+## Privacy Considerations (The Devil's in the Details)
+
+Building the circuit was one thing. Making it actually privacy-preserving was another.
+
+**Mistake #1**: I initially included the birthdate hash as a public input "for accountability." Brilliant, right? Except now anyone can brute-force birthdates against that hash. Birthdates are low-entropy—there's only ~30,000 possible dates in an 80-year span. Rainbow tables would crack that instantly.
+
+**Mistake #2**: Not adding a nullifier. Users could generate unlimited proofs and potentially correlate them. I added a commitment scheme:
+
+```circom
+// User commits to their birthdate once
+commitment = hash(birthdate || secret_salt)
+
+// In each proof, they prove knowledge of birthdate that matches commitment
+// without revealing birthdate or salt
+```
+
+**Mistake #3**: Timestamp linkability. If the `currentDate` is a public input with second-precision, every proof is unique and traceable. I switched to date-only precision and added some jitter.
+
+## Performance Reality Check
+
+Let's be honest: ZK proofs are computationally expensive. On my laptop:
+
+- **Proof generation**: 2-5 seconds (depends on circuit complexity)
+- **Proof verification**: 5-10 milliseconds
+- **Proof size**: ~200-300 bytes (this is actually impressive)
+
+For authentication, this is acceptable. Users prove once, servers verify many times. But for real-time interactions? You'd need to think carefully about UX.
+
+I also discovered the hard way that circuit compilation can take *minutes* for complex circuits. Iteration speed during development is... not great.
+
+## Where This Actually Makes Sense
+
+After building this, I'm convinced ZK proofs are legitimately useful for:
+
+1. **Selective disclosure**: Prove facts about your data without revealing the data (age, location, credentials)
+2. **Private authentication**: Prove you're in a set of authorized users without revealing which user
+3. **Compliance without surveillance**: Prove you meet regulations without exposing sensitive details
+4. **Decentralized systems**: When you can't trust a central authority to verify claims
+
+Where I'm still skeptical:
+
+- **General-purpose computation**: The overhead is still too high for most use cases
+- **The "everything should be ZK" crowd**: Not every problem needs cryptographic proofs
+- **Marketing hype**: 90% of "ZK-powered" products could be done simpler with traditional crypto
+
+## Code Snippet: Simple Range Proof
+
+Since range proofs are fundamental to a lot of ZK privacy stuff, here's the concept:
+
+```circom
+// Prove that a value is within a range without revealing the value
+template RangeProof(min, max) {
+    signal private input value;
+    signal output valid;
+    
+    // Constraint 1: value >= min
+    signal lowerBound;
+    lowerBound <-- value - min;
+    // Add constraint that lowerBound is non-negative
+    // (In practice, you'd use bit decomposition here)
+    
+    // Constraint 2: value <= max
+    signal upperBound;
+    upperBound <-- max - value;
+    // Add constraint that upperBound is non-negative
+    
+    // If both constraints satisfied, valid = 1
+    valid <== 1;
+}
+
+// Usage: Prove your salary is between $50k and $150k
+// without revealing exact amount
+component salaryProof = RangeProof(50000, 150000);
+salaryProof.value <== myActualSalary;
+```
+
+The actual implementation needs bit decomposition and more careful constraint handling, but this captures the idea.
+
+## The Tooling Situation
+
+The ZK developer experience is... improving. Here's what I used:
+
+- **Circom**: Circuit language (quirky but powerful)
+- **snarkjs**: Proof generation and verification in JavaScript
+- **Noir**: Newer language with better DX (I'd try this next time)
+- **ZoKrates**: Python-ish syntax, easier learning curve
+
+Each has trade-offs. Circom has the most examples and community support. Noir feels more like "real" programming. ZoKrates is great for prototyping.
+
+What's still painful:
+- Debugging circuits (no debugger, mostly constraint violation errors)
+- Testing (you write tests by generating proofs, which is slow)
+- Documentation (lots of academic papers, fewer practical guides)
+
+## Lessons Learned
+
+1. **Start small**: Don't try to build a ZK-rollup for your first project. Build a simple proof of knowledge circuit.
+
+2. **Think in constraints, not code**: The mental model is different. You're defining a system of equations, not writing a program.
+
+3. **Security is subtle**: A mathematically correct circuit can still leak information through side channels, public inputs, or proof linkability.
+
+4. **Use existing primitives**: Don't roll your own hash functions or signature schemes in-circuit. Use audited libraries.
+
+5. **The trusted setup matters**: For anything production, either use transparent schemes or participate in/verify a proper ceremony.
+
+6. **Test with malicious inputs**: Try to cheat your own circuit. If you can't break it, maybe it's secure. (But probably get it audited.)
+
+## Is It Worth It?
+
+For me? Absolutely. Not because I'm going to rewrite all authentication in ZK proofs tomorrow, but because it's a genuinely different approach to privacy and trust.
+
+We've spent decades building systems that require trust: trusted third parties, trusted databases, trusted authorities. ZK proofs let you replace some of that trust with math. Not all of it—you still trust the cryptography, the implementation, the setup—but meaningfully less than before.
+
+For security engineers and researchers, ZK proofs are another tool in the toolkit. Like homomorphic encryption, secure multi-party computation, or differential privacy, they solve specific problems in the privacy/security space.
+
+Are they overhyped? Yes.
+Are they underutilized for legitimate privacy use cases? Also yes.
+
+## Next Steps
+
+If you want to try this yourself:
+
+1. Start with [Circom's tutorial](https://docs.circom.io/) or [Noir's docs](https://noir-lang.org/)
+2. Build a simple proof-of-knowledge circuit (prove you know a password hash)
+3. Add constraints (prove the password meets complexity requirements)
+4. Build something privacy-preserving (age verification, credential proofs)
+
+The first circuit is the hardest. After that, you start seeing ZK-shaped problems everywhere.
+
+And hey, if you build something cool—or find a horrifying security flaw in my pseudocode—I'm @yourusername on Twitter. Always happy to talk crypto with fellow travelers down this particular rabbit hole.
+
+---
+
+*P.S. - If you're implementing this for production, please get a proper security audit. My toy project taught me a lot, but I wouldn't trust it with real user data. ZK proofs are powerful, but with great power comes great responsibility... and a surprisingly large attack surface.*
