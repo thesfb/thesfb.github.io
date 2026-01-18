@@ -17,11 +17,19 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
-      - uses: peaceiris/actions-hugo@v2
+          fetch-depth: 0
+      
+      - name: Setup Hugo
+        uses: peaceiris/actions-hugo@v3
         with:
           hugo-version: 'latest'
-      - run: hugo --minify
-      - uses: actions/upload-pages-artifact@v2
+          extended: true
+      
+      - name: Build
+        run: hugo --minify
+      
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
         with:
           path: ./public
 
@@ -32,5 +40,6 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - uses: actions/deploy-pages@v2
+      - name: Deploy to GitHub Pages
         id: deployment
+        uses: actions/deploy-pages@v4
