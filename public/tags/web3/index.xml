@@ -9,6 +9,13 @@
     <lastBuildDate>Sat, 18 Jan 2025 00:00:00 +0000</lastBuildDate>
     <atom:link href="http://localhost:1313/tags/web3/index.xml" rel="self" type="application/rss+xml" />
     <item>
+      <title>jyst good</title>
+      <link>http://localhost:1313/posts/test-post/</link>
+      <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1313/posts/test-post/</guid>
+      <description></description>
+    </item>
+    <item>
       <title>My First Post</title>
       <link>http://localhost:1313/posts/my-first-post/</link>
       <pubDate>Sat, 18 Jan 2025 00:00:00 +0000</pubDate>

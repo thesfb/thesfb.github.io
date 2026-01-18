@@ -3,13 +3,15 @@ languageCode = 'en-us'
 title = 'Sudhanshu Bhardwaj'
 theme = 'paper'
 
-
-
+[outputs]
+  home = ["HTML", "RSS", "JSON"]
 
 [params]
-  color = 'linen'  # or 'dark' for dark mode
+  color = 'linen'
   twitter = '1337_sb'
   github = 'thesfb'
+  customCSS = ["css/custom.css"]
+  
 
 [menu]
   [[menu.main]]
@@ -17,11 +19,3 @@ theme = 'paper'
     name = 'About'
     url = '/about/'
     weight = 10
-  [[menu.main]]
-    identifier = 'posts'
-    name = 'Posts'
-    url = '/posts/'
-    weight = 20
-
-[outputs]
-  home = ["HTML", "RSS", "JSON"]

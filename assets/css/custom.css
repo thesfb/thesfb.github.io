@@ -1,0 +1,37 @@
+.home-header {
+  margin-bottom: 3rem;
+}
+
+.subtitle {
+  font-size: 1rem;
+  color: #666;
+  margin-top: 0.5rem;
+  font-weight: normal;
+}
+
+.post-item {
+  margin-bottom: 2rem;
+  padding-bottom: 2rem;
+  border-bottom: 1px solid #eee;
+}
+
+.post-item:last-child {
+  border-bottom: none;
+}
+
+.post-item h2 {
+  margin-bottom: 0.25rem;
+}
+
+.post-item time {
+  font-size: 0.875rem;
+  color: #999;
+  display: block;
+  margin-bottom: 0.5rem;
+}
+
+.post-item .description {
+  color: #666;
+  font-size: 0.95rem;
+  line-height: 1.6;
+}

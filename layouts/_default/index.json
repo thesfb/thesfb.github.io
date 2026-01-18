@@ -9,7 +9,8 @@
       "title": {{ .Title | jsonify }},
       "url": {{ .Permalink | jsonify }},
       "date_published": {{ .Date.Format "2006-01-02T15:04:05Z07:00" | jsonify }},
-      "summary": {{ .Summary | jsonify }},
+      "description": {{ if .Description }}{{ .Description | jsonify }}{{ else }}{{ .Summary | jsonify }}{{ end }},
+      "summary": {{ if .Description }}{{ .Description | jsonify }}{{ else }}{{ .Summary | jsonify }}{{ end }},
       "content_text": {{ .Plain | jsonify }},
       "tags": {{ .Params.tags | jsonify }}
     }
