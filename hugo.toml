@@ -22,3 +22,6 @@ theme = 'paper'
     name = 'Posts'
     url = '/posts/'
     weight = 20
+
+[outputs]
+  home = ["HTML", "RSS", "JSON"]
