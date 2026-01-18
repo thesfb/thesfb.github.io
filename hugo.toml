@@ -3,6 +3,9 @@ languageCode = 'en-us'
 title = 'Sudhanshu Bhardwaj'
 theme = 'paper'
 
+
+baseURL = 'https://blog.baldbee.me/'
+
 [params]
   color = 'linen'  # or 'dark' for dark mode
   twitter = '1337_sb'
