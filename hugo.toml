@@ -1,0 +1,21 @@
+baseURL = 'https://thesfb.github.io/'
+languageCode = 'en-us'
+title = 'Sudhanshu Bhardwaj'
+theme = 'paper'
+
+[params]
+  color = 'linen'  # or 'dark' for dark mode
+  twitter = '1337_sb'
+  github = 'thesfb'
+
+[menu]
+  [[menu.main]]
+    identifier = 'about'
+    name = 'About'
+    url = '/about/'
+    weight = 10
+  [[menu.main]]
+    identifier = 'posts'
+    name = 'Posts'
+    url = '/posts/'
+    weight = 20
